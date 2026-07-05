@@ -12,20 +12,19 @@ discount types a pure addition, never a modification.
 
 ## Quick Start
 
-### Option 1 — Docker (recommended)
+### Option 1 — Docker
 
-```bash
+bash
 docker build -t ppe .
 docker run -p 8000:8000 ppe
-```
+
 
 ### Option 2 — Local
 
-```bash
-python -m venv venv && source venv/bin/activate   # optional but recommended
+bash
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
-```
+
 
 Then open:
 - **Swagger UI**: http://localhost:8000/docs
@@ -37,25 +36,21 @@ The database is in-memory SQLite and is seeded automatically on startup with:
 - Five demo promotions (flat, category, time-based, buy-x-get-y, and an inactive
   percentage coupon) showing every discount type and the stacking rules in action
 
-No external database, message queue, or paid service is required.
 
 ---
 
 ## Running Tests
 
-```bash
+bash
 pip install -r requirements.txt
 python -m pytest tests/ -v --cov=app --cov-report=term-missing
-```
 
-57 tests, 93% coverage on `app/` (well above the 80% target on the core engine).
+57 tests, 93% coverage on `app/`
 See **TESTING.md** for a full breakdown and how to run specific suites.
 
----
 
 ## Architecture Overview
 
-```
 app/
 ├── main.py                 # FastAPI app, startup/seed, global exception handlers
 ├── middleware.py            # Correlation-ID middleware for structured logging
@@ -90,7 +85,7 @@ app/
     ├── bill.py                # POST /api/v1/bills/calculate
     ├── promotions.py          # Promotion CRUD, activate/deactivate, /simulate
     └── customer_tiers.py      # Customer tier CRUD
-```
+
 
 ### Request flow (bill calculation)
 
@@ -157,18 +152,17 @@ See **DESIGN.md** for the full write-up. In brief:
 
 ---
 
-## What's Not Implemented (and why)
+## Limitations / Future Enhancements
 
-Given this is a take-home assignment, a few "Nice to Have" items were intentionally
-left out to keep the codebase focused and reviewable rather than padded:
+The project implements all core requirements of the assignment, including the discount engine,
+REST APIs, configuration-driven promotions, request validation, health checks, audit trail,
+and automated tests.
 
-- No caching layer — with an in-memory DB and no real network/DB latency, caching
-  would add complexity without a demonstrable benefit here.
-- No rate limiting / feature flags — these are infrastructure concerns better solved
-  at the API gateway/ingress layer in a real deployment, not worth faking in-process.
-- No event-driven architecture — the audit trail (see `promotion_repository.py`) covers
-  the "who changed what, when" requirement without introducing a message broker.
+The following enhancements are not currently implemented and would be suitable for a
+production-scale deployment:
 
-What **is** implemented from "Should Have": audit trail on promotion changes,
-correlation-ID structured logging, health checks, and request validation middleware
-(global exception handlers in `main.py`).
+- Caching– Active promotions could be cached (e.g., Redis) to reduce repeated database lookups.
+- Rate Limiting – Protect APIs from excessive requests using middleware or an API gateway.
+- Feature Flags – Allow gradual rollout of new promotions and discount strategies.
+- Event-Driven Architecture – Publish promotion lifecycle events for analytics, notifications, or downstream systems.
+- External Database – The project uses an embedded/in-memory database for simplicity and easy local setup, as required by the assignment.
