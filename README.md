@@ -12,19 +12,20 @@ discount types a pure addition, never a modification.
 
 ## Quick Start
 
-### Option 1 — Docker
+### Option 1 — Docker (recommended)
 
-bash
+```bash
 docker build -t ppe .
 docker run -p 8000:8000 ppe
-
+```
 
 ### Option 2 — Local
 
-bash
+```bash
+python -m venv venv && source venv/bin/activate   # optional but recommended
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
-
+```
 
 Then open:
 - **Swagger UI**: http://localhost:8000/docs
@@ -36,21 +37,25 @@ The database is in-memory SQLite and is seeded automatically on startup with:
 - Five demo promotions (flat, category, time-based, buy-x-get-y, and an inactive
   percentage coupon) showing every discount type and the stacking rules in action
 
+No external database, message queue, or paid service is required.
 
 ---
 
 ## Running Tests
 
-bash
+```bash
 pip install -r requirements.txt
 python -m pytest tests/ -v --cov=app --cov-report=term-missing
+```
 
-57 tests, 93% coverage on `app/`
+57 tests, 93% coverage on `app/` (well above the 80% target on the core engine).
 See **TESTING.md** for a full breakdown and how to run specific suites.
 
+---
 
 ## Architecture Overview
 
+```
 app/
 ├── main.py                 # FastAPI app, startup/seed, global exception handlers
 ├── middleware.py            # Correlation-ID middleware for structured logging
@@ -85,7 +90,7 @@ app/
     ├── bill.py                # POST /api/v1/bills/calculate
     ├── promotions.py          # Promotion CRUD, activate/deactivate, /simulate
     └── customer_tiers.py      # Customer tier CRUD
-
+```
 
 ### Request flow (bill calculation)
 
@@ -164,5 +169,5 @@ production-scale deployment:
 - Caching– Active promotions could be cached (e.g., Redis) to reduce repeated database lookups.
 - Rate Limiting – Protect APIs from excessive requests using middleware or an API gateway.
 - Feature Flags – Allow gradual rollout of new promotions and discount strategies.
-- Event-Driven Architecture – Publish promotion lifecycle events for analytics, notifications, or downstream systems.
+- Event-Driven Architecture– Publish promotion lifecycle events for analytics, notifications, or downstream systems.
 - External Database – The project uses an embedded/in-memory database for simplicity and easy local setup, as required by the assignment.
