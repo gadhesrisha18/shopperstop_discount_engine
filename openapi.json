@@ -1,0 +1,1337 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ShopperStop Promotional Pricing Engine",
+    "description": "Configurable, API-driven discount engine for tiered, stacked and time-based promotions.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/bills/calculate": {
+      "post": {
+        "tags": [
+          "Bills"
+        ],
+        "summary": "Calculate Bill",
+        "description": "Calculate the final bill for a cart, applying the customer's tier slab\ndiscount plus any active, applicable promotions (stacked per priority\nand stacking rules, capped at the configured max discount rate).\n\n`preview: true` runs the exact same logic without any side effects\n(nothing is written to the DB either way \u2014 this endpoint is always\nidempotent/side-effect-free; `preview` exists to make that contract\nexplicit to callers such as the Marketing Manager's what-if tooling).",
+        "operationId": "calculate_bill_api_v1_bills_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillCalculateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillCalculateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions": {
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Create Promotion",
+        "operationId": "create_promotion_api_v1_promotions_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "List Promotions",
+        "operationId": "list_promotions_api_v1_promotions_get",
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          },
+          {
+            "name": "discount_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Discount Type"
+            }
+          },
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/{promo_id}": {
+      "get": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Get Promotion",
+        "operationId": "get_promotion_api_v1_promotions__promo_id__get",
+        "parameters": [
+          {
+            "name": "promo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Promo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Update Promotion",
+        "operationId": "update_promotion_api_v1_promotions__promo_id__put",
+        "parameters": [
+          {
+            "name": "promo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Promo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Delete Promotion",
+        "operationId": "delete_promotion_api_v1_promotions__promo_id__delete",
+        "parameters": [
+          {
+            "name": "promo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Promo Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/{promo_id}/activate": {
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Activate Promotion",
+        "operationId": "activate_promotion_api_v1_promotions__promo_id__activate_post",
+        "parameters": [
+          {
+            "name": "promo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Promo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/{promo_id}/deactivate": {
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Deactivate Promotion",
+        "operationId": "deactivate_promotion_api_v1_promotions__promo_id__deactivate_post",
+        "parameters": [
+          {
+            "name": "promo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Promo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/simulate": {
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Simulate Promotion",
+        "description": "Lets Marketing preview the effect of a promotion config BEFORE saving/activating it.\nCombines the draft promotion with the store's currently active promotions\nso marketing can see the *real* stacked outcome, not just the new promo in isolation.",
+        "operationId": "simulate_promotion_api_v1_promotions_simulate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionSimulateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillCalculateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customer-tiers": {
+      "get": {
+        "tags": [
+          "Customer Tiers"
+        ],
+        "summary": "List Tiers",
+        "operationId": "list_tiers_api_v1_customer_tiers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerTierOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Tiers Api V1 Customer Tiers Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Customer Tiers"
+        ],
+        "summary": "Create Tier",
+        "operationId": "create_tier_api_v1_customer_tiers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTierCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTierOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customer-tiers/{tier_id}": {
+      "put": {
+        "tags": [
+          "Customer Tiers"
+        ],
+        "summary": "Update Tier",
+        "operationId": "update_tier_api_v1_customer_tiers__tier_id__put",
+        "parameters": [
+          {
+            "name": "tier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tier Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTierUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTierOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BillCalculateRequest": {
+        "properties": {
+          "cart_items": {
+            "items": {
+              "$ref": "#/components/schemas/CartItemIn"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Cart Items"
+          },
+          "customer_tier": {
+            "type": "string",
+            "title": "Customer Tier",
+            "description": "e.g. REGULAR, PREMIUM",
+            "default": "REGULAR"
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Id"
+          },
+          "coupon_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Coupon Codes"
+          },
+          "now": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Now",
+            "description": "Override evaluation time, mainly for testing time-based promos"
+          },
+          "preview": {
+            "type": "boolean",
+            "title": "Preview",
+            "description": "If true, calculation is not persisted/counted anywhere (idempotent preview)",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "cart_items"
+        ],
+        "title": "BillCalculateRequest"
+      },
+      "BillCalculateResponse": {
+        "properties": {
+          "cart_subtotal": {
+            "type": "number",
+            "title": "Cart Subtotal"
+          },
+          "total_discount": {
+            "type": "number",
+            "title": "Total Discount"
+          },
+          "final_amount": {
+            "type": "number",
+            "title": "Final Amount"
+          },
+          "customer_tier": {
+            "type": "string",
+            "title": "Customer Tier"
+          },
+          "discounts_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountBreakdownOut"
+            },
+            "type": "array",
+            "title": "Discounts Breakdown"
+          },
+          "capped": {
+            "type": "boolean",
+            "title": "Capped",
+            "default": false
+          },
+          "cap_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Rate"
+          },
+          "correlation_id": {
+            "type": "string",
+            "title": "Correlation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cart_subtotal",
+          "total_discount",
+          "final_amount",
+          "customer_tier",
+          "discounts_breakdown",
+          "correlation_id"
+        ],
+        "title": "BillCalculateResponse"
+      },
+      "CartItemIn": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": "GENERAL"
+          },
+          "unit_price": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Price",
+            "description": "Must be a positive number"
+          },
+          "quantity": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity",
+            "description": "Must be at least 1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "name",
+          "unit_price",
+          "quantity"
+        ],
+        "title": "CartItemIn"
+      },
+      "CustomerTierCreateRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "slabs": {
+            "items": {
+              "$ref": "#/components/schemas/SlabIn"
+            },
+            "type": "array",
+            "title": "Slabs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "slabs"
+        ],
+        "title": "CustomerTierCreateRequest"
+      },
+      "CustomerTierOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "slabs": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Slabs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "slabs"
+        ],
+        "title": "CustomerTierOut"
+      },
+      "CustomerTierUpdateRequest": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "slabs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SlabIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slabs"
+          }
+        },
+        "type": "object",
+        "title": "CustomerTierUpdateRequest"
+      },
+      "DiscountBreakdownOut": {
+        "properties": {
+          "discount_id": {
+            "type": "string",
+            "title": "Discount Id"
+          },
+          "discount_name": {
+            "type": "string",
+            "title": "Discount Name"
+          },
+          "discount_type": {
+            "type": "string",
+            "title": "Discount Type"
+          },
+          "amount_off": {
+            "type": "number",
+            "title": "Amount Off"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "applied": {
+            "type": "boolean",
+            "title": "Applied"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          },
+          "skipped_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skipped Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "discount_id",
+          "discount_name",
+          "discount_type",
+          "amount_off",
+          "priority",
+          "applied"
+        ],
+        "title": "DiscountBreakdownOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "db": {
+            "type": "string",
+            "title": "Db"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "db"
+        ],
+        "title": "HealthResponse"
+      },
+      "PromotionCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "discount_type": {
+            "type": "string",
+            "title": "Discount Type",
+            "description": "SLAB | FLAT | PERCENTAGE | CATEGORY | BUY_X_GET_Y | TIME_BASED"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "params": {
+            "type": "object",
+            "title": "Params",
+            "description": "Type-specific parameters, see API docs for schema per type"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Priority",
+            "default": 100
+          },
+          "stackable": {
+            "type": "boolean",
+            "title": "Stackable",
+            "default": true
+          },
+          "store_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Store Ids"
+          },
+          "customer_tiers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Customer Tiers"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "discount_type",
+          "params"
+        ],
+        "title": "PromotionCreateRequest"
+      },
+      "PromotionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PromotionOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "PromotionListResponse"
+      },
+      "PromotionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "discount_type": {
+            "type": "string",
+            "title": "Discount Type"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "params": {
+            "type": "object",
+            "title": "Params"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "stackable": {
+            "type": "boolean",
+            "title": "Stackable"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "store_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Store Ids"
+          },
+          "customer_tiers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Customer Tiers"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "discount_type",
+          "description",
+          "params",
+          "priority",
+          "stackable",
+          "is_active",
+          "store_ids",
+          "customer_tiers",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PromotionOut"
+      },
+      "PromotionSimulateRequest": {
+        "properties": {
+          "promotion": {
+            "$ref": "#/components/schemas/PromotionCreateRequest"
+          },
+          "cart_items": {
+            "items": {
+              "$ref": "#/components/schemas/CartItemIn"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Cart Items"
+          },
+          "customer_tier": {
+            "type": "string",
+            "title": "Customer Tier",
+            "default": "REGULAR"
+          },
+          "now": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Now"
+          }
+        },
+        "type": "object",
+        "required": [
+          "promotion",
+          "cart_items"
+        ],
+        "title": "PromotionSimulateRequest",
+        "description": "Lets marketing test a NOT-YET-SAVED promotion config against a sample cart."
+      },
+      "PromotionUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "params": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Params"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "stackable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stackable"
+          },
+          "store_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Ids"
+          },
+          "customer_tiers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Tiers"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          }
+        },
+        "type": "object",
+        "title": "PromotionUpdateRequest"
+      },
+      "SlabIn": {
+        "properties": {
+          "min": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "rate": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "rate"
+        ],
+        "title": "SlabIn"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

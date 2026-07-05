@@ -1,0 +1,25 @@
+{
+  "customer_tiers": {
+    "REGULAR": {
+      "label": "Regular Customer",
+      "slabs": [
+        {"min": 0, "max": 5000, "rate": 0.0},
+        {"min": 5000, "max": 10000, "rate": 0.10},
+        {"min": 10000, "max": null, "rate": 0.20}
+      ]
+    },
+    "PREMIUM": {
+      "label": "Premium Customer",
+      "slabs": [
+        {"min": 0, "max": 5000, "rate": 0.10},
+        {"min": 5000, "max": 10000, "rate": 0.20},
+        {"min": 10000, "max": null, "rate": 0.30}
+      ]
+    }
+  },
+  "stacking_rules": {
+    "max_total_discount_rate": 0.40,
+    "apply_order": "priority_ascending",
+    "allow_stacking_by_default": true
+  }
+}
