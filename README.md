@@ -12,7 +12,7 @@ discount types a pure addition, never a modification.
 
 ## Quick Start
 
-### Option 1 — Docker (recommended)
+### Option 1 — Docker 
 
 ```bash
 docker build -t ppe .
